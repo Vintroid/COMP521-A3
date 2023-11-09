@@ -10,26 +10,22 @@ public class SceneHandler : MonoBehaviour
     [SerializeField] GameObject agent;
     [SerializeField] GameObject chair;
 
+    // List of agents in the scene
+    public List<GameObject> agentList;
+
     // Parameters for scene initialization
     public int agentNumber = 0;
     public int chairNumber = 0;
-    public float agentSpeed = 1f;
-    public float chairSpeed = 1f;
 
-    // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
+        agentList = new List<GameObject>();
         // Generate agents, chairs, and goal at random
         // There shouldn't be more than 551 objects in grid
         GenerateAgents();
         GenerateChairs();
         GenerateGoal();
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     // Placing agents randomly on the grid
@@ -50,9 +46,10 @@ public class SceneHandler : MonoBehaviour
             {
                 // If empty instantiates a new agent in the map
                 Vector3 worldPosition = gridMap.GetWorldPosition(randomLength,randomWidth);
-                Vector3 agentOffset = new Vector3(0f, 1f, 0f);
+                Vector3 agentOffset = new Vector3(0f, 0.51f, 0f);
                 GameObject newAgent = GameObject.Instantiate(agent, worldPosition + agentOffset , Quaternion.identity);
                 gridMap.grid[randomLength,randomWidth].gridObject = newAgent;
+                agentList.Add(newAgent);
                 placedAgents++;
             }
 
@@ -75,7 +72,7 @@ public class SceneHandler : MonoBehaviour
             // Checking if node already contains an object
             if (gridMap.grid[randomLength, randomWidth].gridObject == null)
             {
-                // If empty instantiates a new agent in the map
+                // If empty instantiates a new chair in the map
                 Vector3 worldPosition = gridMap.GetWorldPosition(randomLength, randomWidth);
                 Vector3 chairOffset = new Vector3(0f, 1f, 0f);
                 GameObject newChair = GameObject.Instantiate(chair, worldPosition + chairOffset, Quaternion.Euler(0f,180f,0f));
@@ -101,14 +98,31 @@ public class SceneHandler : MonoBehaviour
             // Checking if node already contains an object
             if (gridMap.grid[randomLength, randomWidth].gridObject == null)
             {
-                // If empty instantiates a new agent in the map
+                // If empty instantiates a goal 
                 Vector3 worldPosition = gridMap.GetWorldPosition(randomLength, randomWidth);
-                Vector3 goalOffset = new Vector3(0f, 0.05f, 0f);
+                Vector3 goalOffset = new Vector3(0f, 0.1f, 0f);
                 GameObject newGoal = GameObject.Instantiate(goal, worldPosition + goalOffset, Quaternion.identity);
                 gridMap.grid[randomLength, randomWidth].gridObject = newGoal;
+                gridMap.goalNode = new Vector2Int(randomLength, randomWidth);
                 goalPlaced = true;
             }
 
         }
+    }
+
+    // Goal disappeareance handler 
+    public void WaitSignal()
+    {
+        gridMap.goalNode = new Vector2Int(-1,-1);
+        StartCoroutine(WaitingCoroutine());
+    }
+
+    // Coroutine is to make sure all agents have made their last update
+    // and noticed that the goalNode is missing. They will naturally wait
+    // for a bit and all start again due to the nodeToNodeTimer
+    IEnumerator WaitingCoroutine()
+    {
+        yield return new WaitForSeconds(0.5f);
+        GenerateGoal();
     }
 }

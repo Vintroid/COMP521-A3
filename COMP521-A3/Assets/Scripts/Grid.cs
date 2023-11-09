@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
@@ -17,10 +18,24 @@ public class Grid : MonoBehaviour
     [SerializeField] LayerMask obstacleLayer;
     [SerializeField] LayerMask goalLayer;
 
+    // Goal coordinates for pathfinding
+    public Vector2Int goalNode;
+
     private void Awake()
     {
+        // We want the grid initialize first
         GenerateGrid();
+    }
 
+    private void Start()
+    {
+        CheckPassableTerrain();
+    }
+
+    private void Update()
+    {
+        CheckPassableTerrain(); // Updating our grid information because of object movement
+        SceneView.RepaintAll(); // Repaints Gizmos because we changed passable nodes
     }
 
     // Function on startup to initialize the 2d node array
@@ -36,7 +51,6 @@ public class Grid : MonoBehaviour
             }
         }
     
-        CheckPassableTerrain();
     }
 
     // Function to perform a check on array to update node passable field and objects
@@ -50,10 +64,10 @@ public class Grid : MonoBehaviour
                 RaycastHit hit;
 
                 // Making a box check with the obstacle layer to analyse obstacle placement
-                bool hit_detect = Physics.BoxCast(worldPosition, Vector3.one/2,Vector3.zero,out hit,Quaternion.identity,obstacleLayer);
-                bool passable = !hit_detect;
+                bool hit_detect = Physics.Raycast(worldPosition, Vector3.up,out hit,10f,obstacleLayer);
+                bool passable = !Physics.CheckBox(worldPosition,Vector3.one/2,Quaternion.identity,obstacleLayer);
                 grid[x, y].passable = passable;
-
+                
                 if (hit_detect)
                 {
                     grid[x,y].gridObject = hit.collider.gameObject;
@@ -104,19 +118,6 @@ public class Grid : MonoBehaviour
     {
         Vector2Int positionOnGrid = new Vector2Int((int)(worldPosition.x / cellSize), (int)(worldPosition.z / cellSize));
         return positionOnGrid;
-    }
-
-    // Placing a gameobject at initialization on the grid
-    public void PlaceObject(Vector2Int positionOnGrid, GameObject gridObject)
-    {
-        if (CheckBoundary(positionOnGrid) == true)
-        {
-            grid[positionOnGrid.x, positionOnGrid.y].gridObject = gridObject;
-        }
-        else
-        {
-            Debug.Log("You are trying to place an object outside the boundaries!");
-        }
     }
 
     // Function to check if an object is out of bounds 
