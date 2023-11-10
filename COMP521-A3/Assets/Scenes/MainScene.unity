@@ -880,7 +880,7 @@ MonoBehaviour:
   chair: {fileID: 5808053724505863488, guid: caa277247482979498d0011d8c450cff, type: 3}
   agentList: []
   agentNumber: 4
-  chairNumber: 64
+  chairNumber: 4
 --- !u!1 &1690727714
 GameObject:
   m_ObjectHideFlags: 0
